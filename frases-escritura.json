@@ -1,0 +1,222 @@
+{
+  "temas": {
+    "animales": {
+      "facil": [
+        "El gato juega con la pelota",
+        "Los perros son muy divertidos",
+        "El pato nada en el lago",
+        "Mi conejo es muy tierno",
+        "El pájaro canta en la mañana",
+        "La vaca da leche fresca",
+        "El caballo corre muy rápido",
+        "El pez vive en el agua",
+        "La rana salta muy alto",
+        "El león ruge fuertemente",
+        "El mono come plátanos",
+        "La abeja hace miel dulce",
+        "El oso es muy grande",
+        "La tortuga camina despacio",
+        "El tigre tiene rayas negras"
+      ],
+      "medio": [
+        "Los elefantes tienen una memoria excelente",
+        "Las jirafas son los animales más altos",
+        "Los delfines son muy inteligentes",
+        "Las mariposas tienen alas de colores",
+        "Los pingüinos viven en lugares fríos",
+        "Las águilas pueden ver desde muy lejos",
+        "Los canguros saltan largas distancias",
+        "Las serpientes no tienen patas para caminar",
+        "Los osos polares son blancos como la nieve",
+        "Las hormigas trabajan en equipo organizadamente",
+        "Los búhos cazan durante la noche",
+        "Las ballenas son mamíferos acuáticos gigantes"
+      ],
+      "dificil": [
+        "El león es conocido como el rey de la selva por su majestuosidad",
+        "Los colibríes pueden volar hacia atrás y son muy pequeños",
+        "Las ballenas azules son los animales más grandes del planeta",
+        "Los camaleones pueden cambiar de color para camuflarse",
+        "Los murciélagos son los únicos mamíferos capaces de volar",
+        "Las tortugas marinas pueden vivir más de cien años",
+        "Los guepardos son los animales terrestres más veloces del mundo",
+        "Los elefantes se comunican mediante sonidos de baja frecuencia"
+      ]
+    },
+    "naturaleza": {
+      "facil": [
+        "El sol brilla en el cielo",
+        "Las flores son muy bonitas",
+        "El mar es azul y grande",
+        "Los árboles dan sombra",
+        "La luna sale de noche",
+        "Las nubes flotan en el aire",
+        "El viento mueve las hojas",
+        "La lluvia moja la tierra",
+        "Las estrellas brillan mucho",
+        "El río tiene agua limpia",
+        "La nieve es blanca y fría",
+        "Las montañas son muy altas",
+        "El lago está muy tranquilo",
+        "Las rocas son muy duras"
+      ],
+      "medio": [
+        "El arcoíris aparece después de la lluvia",
+        "Las montañas son muy altas y rocosas",
+        "En el bosque viven muchos animales",
+        "El río fluye hacia el océano",
+        "Los volcanes pueden hacer erupción",
+        "Las olas del mar son muy fuertes",
+        "El desierto es un lugar muy seco",
+        "Las cascadas caen desde muy alto",
+        "Los glaciares son enormes masas de hielo",
+        "El valle está entre dos montañas grandes",
+        "La selva tiene muchos árboles y plantas"
+      ],
+      "dificil": [
+        "La fotosíntesis es el proceso por el cual las plantas producen su alimento",
+        "Los volcanes pueden estar activos, inactivos o extintos",
+        "El ciclo del agua incluye evaporación, condensación y precipitación",
+        "La biodiversidad es importante para el equilibrio del ecosistema",
+        "Los terremotos ocurren por el movimiento de las placas tectónicas",
+        "El efecto invernadero ayuda a mantener la temperatura del planeta",
+        "Los arrecifes de coral son ecosistemas marinos muy importantes"
+      ]
+    },
+    "comida": {
+      "facil": [
+        "Me gusta el helado de chocolate",
+        "Las frutas son muy saludables",
+        "El pan es muy rico y fresco",
+        "Bebo agua todos los días",
+        "Las manzanas son rojas y dulces",
+        "Me encanta comer pizza",
+        "El jugo de naranja es delicioso",
+        "Las galletas están muy crujientes",
+        "La sopa está caliente y rica",
+        "El queso es amarillo y suave",
+        "Los plátanos son muy nutritivos",
+        "La leche me ayuda a crecer"
+      ],
+      "medio": [
+        "Mi comida favorita es la pizza con queso",
+        "Las verduras son importantes para crecer sano",
+        "El desayuno es la comida más importante del día",
+        "Me encanta comer pasta con tomate",
+        "Las ensaladas tienen muchas vitaminas",
+        "El arroz se puede preparar de muchas formas",
+        "Los huevos son ricos en proteínas",
+        "Las zanahorias ayudan a tener buena vista",
+        "El pescado es bueno para el cerebro",
+        "Los cereales dan energía por la mañana"
+      ],
+      "dificil": [
+        "Una alimentación balanceada incluye proteínas, carbohidratos y vitaminas",
+        "Es importante comer cinco porciones de frutas y verduras al día",
+        "El calcio de los lácteos ayuda a fortalecer los huesos",
+        "Beber suficiente agua mantiene nuestro cuerpo hidratado",
+        "Los alimentos procesados tienen mucha azúcar y sal añadida",
+        "Una dieta saludable previene muchas enfermedades crónicas"
+      ]
+    },
+    "escuela": {
+      "facil": [
+        "Me gusta ir a la escuela",
+        "Tengo muchos amigos en clase",
+        "Leo libros muy interesantes",
+        "Aprendo cosas nuevas cada día",
+        "La maestra es muy amable",
+        "Juego en el recreo",
+        "Hago la tarea en casa",
+        "Me gusta dibujar y pintar",
+        "Estudio matemáticas y español",
+        "La escuela tiene un patio grande",
+        "Uso lápiz y cuaderno",
+        "Las clases son divertidas"
+      ],
+      "medio": [
+        "En la biblioteca hay muchos libros para leer",
+        "La profesora explica las lecciones muy bien",
+        "Hago la tarea en casa todas las tardes",
+        "Los exámenes me ayudan a aprender mejor",
+        "Trabajo en equipo con mis compañeros",
+        "El laboratorio de ciencias es fascinante",
+        "Participo en las actividades deportivas",
+        "Las excursiones escolares son emocionantes",
+        "Respeto las reglas del salón de clases"
+      ],
+      "dificil": [
+        "Las matemáticas me enseñan a resolver problemas de forma lógica",
+        "La lectura mejora mi vocabulario y comprensión del mundo",
+        "Trabajar en equipo desarrolla habilidades de colaboración",
+        "El estudio constante es la clave del éxito académico",
+        "La educación abre puertas a mejores oportunidades en el futuro",
+        "Desarrollar buenos hábitos de estudio facilita el aprendizaje"
+      ]
+    },
+    "ciencia": {
+      "facil": [
+        "La Tierra gira alrededor del Sol",
+        "El agua puede ser sólida o líquida",
+        "Las plantas necesitan luz solar",
+        "El aire que respiramos es oxígeno",
+        "Los imanes atraen el metal",
+        "El fuego necesita oxígeno",
+        "El hielo es agua congelada",
+        "Las semillas se convierten en plantas",
+        "El día y la noche se alternan",
+        "Los animales necesitan comer"
+      ],
+      "medio": [
+        "Los planetas del sistema solar giran alrededor del Sol",
+        "El agua se evapora con el calor del sol",
+        "Las abejas ayudan a polinizar las flores",
+        "Los imanes atraen objetos de metal",
+        "La Tierra tiene diferentes capas internas",
+        "Los seres vivos están formados por células",
+        "La energía solar puede generar electricidad",
+        "Los dinosaurios se extinguieron hace millones de años"
+      ],
+      "dificil": [
+        "La gravedad es la fuerza que mantiene a los planetas en órbita",
+        "Los ecosistemas están formados por seres vivos y su entorno",
+        "La electricidad fluye a través de materiales conductores",
+        "El ADN contiene la información genética de los seres vivos",
+        "La teoría de la evolución explica la diversidad de especies",
+        "Los átomos son las unidades básicas de la materia"
+      ]
+    },
+    "general": {
+      "facil": [
+        "Hoy es un día muy bonito",
+        "Me gusta jugar con mis amigos",
+        "La familia es muy importante",
+        "Siempre digo por favor y gracias",
+        "Ayudo en las tareas del hogar",
+        "Me gusta aprender cosas nuevas",
+        "Cuido mis juguetes y libros",
+        "Soy amable con los demás",
+        "Me lavo las manos antes de comer",
+        "Duermo temprano todas las noches"
+      ],
+      "medio": [
+        "Es importante ser amable con los demás",
+        "Cuidar el medio ambiente es tarea de todos",
+        "Leer libros estimula la imaginación",
+        "El ejercicio mantiene el cuerpo sano",
+        "Compartir con otros nos hace felices",
+        "Respetar las reglas es necesario",
+        "Ahorrar dinero es un buen hábito",
+        "Ayudar a quien lo necesita es noble"
+      ],
+      "dificil": [
+        "La práctica constante es fundamental para mejorar cualquier habilidad",
+        "Respetar las diferencias nos hace una sociedad más inclusiva",
+        "La tecnología ha cambiado la forma en que nos comunicamos",
+        "El aprendizaje es un proceso continuo que dura toda la vida",
+        "La perseverancia y el esfuerzo conducen al éxito",
+        "Tomar decisiones responsables afecta nuestro futuro"
+      ]
+    }
+  }
+}

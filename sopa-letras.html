@@ -13,7 +13,7 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
         
         const WordSearch = () => {
           const [grid, setGrid] = useState([]);
@@ -23,11 +23,54 @@
           const [gameStarted, setGameStarted] = useState(false);
           const [difficulty, setDifficulty] = useState(null);
           const [score, setScore] = useState(0);
+          const [wordLists, setWordLists] = useState(null);
+          const [selectedTheme, setSelectedTheme] = useState(null);
+          const [showThemeSelector, setShowThemeSelector] = useState(false);
 
-          const wordLists = {
-            facil: ['GATO', 'PERRO', 'CASA', 'SOL', 'MAR'],
-            medio: ['AVION', 'LIBRO', 'ARBOL', 'FLOR', 'MESA', 'SILLA'],
-            dificil: ['MARIPOSA', 'ELEFANTE', 'DINOSAURIO', 'MONTAÑA', 'COMPUTADORA']
+          // Cargar palabras del archivo JSON
+          useEffect(() => {
+            fetch('palabras-sopa.json')
+              .then(response => response.json())
+              .then(data => setWordLists(data.temas))
+              .catch(error => {
+                console.error('Error cargando palabras:', error);
+                // Palabras de respaldo si no se puede cargar el archivo
+                setWordLists({
+                  general: {
+                    facil: ['GATO', 'PERRO', 'CASA', 'SOL', 'MAR'],
+                    medio: ['AVION', 'LIBRO', 'ARBOL', 'FLOR', 'MESA', 'SILLA'],
+                    dificil: ['MARIPOSA', 'ELEFANTE', 'DINOSAURIO', 'MONTAÑA', 'COMPUTADORA']
+                  }
+                });
+              });
+          }, []);
+
+          const getRandomWords = (theme, level) => {
+            if (!wordLists) return [];
+            
+            let allWords = [];
+            
+            if (theme === 'todas') {
+              // Mezclar palabras de todos los temas
+              Object.keys(wordLists).forEach(themeName => {
+                if (wordLists[themeName][level]) {
+                  allWords = [...allWords, ...wordLists[themeName][level]];
+                }
+              });
+            } else {
+              // Usar palabras del tema seleccionado
+              allWords = [...(wordLists[theme]?.[level] || [])];
+            }
+            
+            // Mezclar completamente el array
+            for (let i = allWords.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [allWords[i], allWords[j]] = [allWords[j], allWords[i]];
+            }
+            
+            // Seleccionar número de palabras según dificultad
+            const count = level === 'facil' ? 5 : level === 'medio' ? 6 : 7;
+            return allWords.slice(0, Math.min(count, allWords.length));
           };
 
           const generateGrid = (wordList, size) => {
@@ -93,16 +136,27 @@
             return { grid: newGrid, words: placedWords };
           };
 
-          const startGame = (level) => {
+          const startGame = (level, theme) => {
             setDifficulty(level);
+            setSelectedTheme(theme);
             const size = level === 'facil' ? 8 : level === 'medio' ? 10 : 12;
-            const { grid: newGrid, words: placedWords } = generateGrid(wordLists[level], size);
+            const selectedWords = getRandomWords(theme, level);
+            const { grid: newGrid, words: placedWords } = generateGrid(selectedWords, size);
             setGrid(newGrid);
             setWords(placedWords);
             setFoundWords([]);
             setSelectedCells([]);
             setGameStarted(true);
             setScore(0);
+          };
+
+          const playAgain = () => {
+            startGame(difficulty, selectedTheme);
+          };
+
+          const selectDifficulty = (level) => {
+            setDifficulty(level);
+            setShowThemeSelector(true);
           };
 
           const handleCellClick = (row, col) => {
@@ -125,7 +179,15 @@
             }
           };
 
-          if (!gameStarted) {
+          if (!wordLists) {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-green-400 to-teal-500 p-4 flex items-center justify-center">
+                <div className="text-white text-2xl">Cargando palabras...</div>
+              </div>
+            );
+          }
+
+          if (!gameStarted && !showThemeSelector) {
             return (
               <div className="min-h-screen bg-gradient-to-b from-green-400 to-teal-500 p-4">
                 <div className="max-w-4xl mx-auto text-white">
@@ -137,11 +199,11 @@
                   </a>
                   
                   <h2 className="text-4xl font-bold mb-8 text-center">Sopa de Letras 🔤</h2>
-                  <p className="text-xl text-center mb-8">Elige tu nivel:</p>
+                  <p className="text-xl text-center mb-8">Elige tu nivel de dificultad:</p>
                   
                   <div className="grid md:grid-cols-3 gap-6">
                     <button
-                      onClick={() => startGame('facil')}
+                      onClick={() => selectDifficulty('facil')}
                       className="bg-green-500 hover:bg-green-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">😊 Fácil</h3>
@@ -150,7 +212,7 @@
                     </button>
                     
                     <button
-                      onClick={() => startGame('medio')}
+                      onClick={() => selectDifficulty('medio')}
                       className="bg-yellow-500 hover:bg-yellow-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🤔 Medio</h3>
@@ -159,13 +221,59 @@
                     </button>
                     
                     <button
-                      onClick={() => startGame('dificil')}
+                      onClick={() => selectDifficulty('dificil')}
                       className="bg-red-500 hover:bg-red-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🔥 Difícil</h3>
                       <p className="text-sm">Palabras largas</p>
                       <p className="text-sm">Cuadrícula 12×12</p>
                     </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (!gameStarted && showThemeSelector) {
+            const themes = [
+              { id: 'todas', name: 'Todas (Mezcla)', emoji: '🎲' },
+              { id: 'animales', name: 'Animales', emoji: '🦁' },
+              { id: 'colores', name: 'Colores', emoji: '🎨' },
+              { id: 'comida', name: 'Comida', emoji: '🍕' },
+              { id: 'naturaleza', name: 'Naturaleza', emoji: '🌳' },
+              { id: 'objetos', name: 'Objetos', emoji: '📦' },
+              { id: 'deportes', name: 'Deportes', emoji: '⚽' },
+              { id: 'escuela', name: 'Escuela', emoji: '📚' },
+              { id: 'transporte', name: 'Transporte', emoji: '🚗' }
+            ];
+
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-green-400 to-teal-500 p-4">
+                <div className="max-w-5xl mx-auto text-white">
+                  <button
+                    onClick={() => {
+                      setShowThemeSelector(false);
+                      setDifficulty(null);
+                    }}
+                    className="mb-4 bg-white text-teal-600 px-4 py-2 rounded-lg font-bold"
+                  >
+                    ← Volver a Niveles
+                  </button>
+                  
+                  <h2 className="text-4xl font-bold mb-4 text-center">Elige una temática 🎯</h2>
+                  <p className="text-xl text-center mb-8">Nivel: {difficulty === 'facil' ? 'Fácil 😊' : difficulty === 'medio' ? 'Medio 🤔' : 'Difícil 🔥'}</p>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {themes.map(theme => (
+                      <button
+                        key={theme.id}
+                        onClick={() => startGame(difficulty, theme.id)}
+                        className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl p-6 transform transition hover:scale-105"
+                      >
+                        <div className="text-5xl mb-2">{theme.emoji}</div>
+                        <h3 className="text-xl font-bold">{theme.name}</h3>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -193,16 +301,20 @@
                     <p className="text-xl">¡Encontraste todas las palabras!</p>
                     <div className="flex gap-4 justify-center mt-4 flex-wrap">
                       <button
-                        onClick={() => startGame(difficulty)}
+                        onClick={playAgain}
                         className="bg-white text-green-600 px-6 py-2 rounded-lg font-bold"
                       >
-                        Jugar de Nuevo
+                        Otra Sopa (misma dificultad)
                       </button>
                       <button
-                        onClick={() => setGameStarted(false)}
+                        onClick={() => {
+                          setGameStarted(false);
+                          setShowThemeSelector(false);
+                          setDifficulty(null);
+                        }}
                         className="bg-white text-green-600 px-6 py-2 rounded-lg font-bold"
                       >
-                        Cambiar Nivel
+                        Cambiar Nivel o Tema
                       </button>
                     </div>
                   </div>

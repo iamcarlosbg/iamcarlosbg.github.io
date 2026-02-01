@@ -13,7 +13,7 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
         
         const TypingPractice = () => {
           const [level, setLevel] = useState(null);
@@ -23,36 +23,104 @@
           const [completed, setCompleted] = useState(false);
           const [mistakes, setMistakes] = useState(0);
           const [score, setScore] = useState(0);
+          const [textLists, setTextLists] = useState(null);
+          const [selectedTheme, setSelectedTheme] = useState(null);
+          const [showThemeSelector, setShowThemeSelector] = useState(false);
+          const [usedTexts, setUsedTexts] = useState([]);
 
-          const texts = {
-            facil: [
-              'El gato juega con la pelota',
-              'Me gusta el helado de chocolate',
-              'El sol brilla en el cielo',
-              'Los perros son muy divertidos'
-            ],
-            medio: [
-              'En el jardín hay muchas flores de colores',
-              'Los dinosaurios vivieron hace millones de años',
-              'Me encanta leer libros de aventuras',
-              'El arcoíris aparece después de la lluvia'
-            ],
-            dificil: [
-              'La computadora es una herramienta muy útil para aprender',
-              'Los astronautas viajan al espacio en cohetes espaciales',
-              'La fotosíntesis es el proceso por el cual las plantas producen su alimento',
-              'El océano Pacífico es el más grande de todos los océanos del mundo'
-            ]
+          // Cargar frases del archivo JSON
+          useEffect(() => {
+            fetch('frases-escritura.json')
+              .then(response => response.json())
+              .then(data => setTextLists(data.temas))
+              .catch(error => {
+                console.error('Error cargando frases:', error);
+                // Frases de respaldo
+                setTextLists({
+                  general: {
+                    facil: [
+                      'El gato juega con la pelota',
+                      'Me gusta el helado de chocolate',
+                      'El sol brilla en el cielo',
+                      'Los perros son muy divertidos'
+                    ],
+                    medio: [
+                      'En el jardín hay muchas flores de colores',
+                      'Los dinosaurios vivieron hace millones de años',
+                      'Me encanta leer libros de aventuras',
+                      'El arcoíris aparece después de la lluvia'
+                    ],
+                    dificil: [
+                      'La computadora es una herramienta muy útil para aprender',
+                      'Los astronautas viajan al espacio en cohetes espaciales',
+                      'La fotosíntesis es el proceso por el cual las plantas producen su alimento',
+                      'El océano Pacífico es el más grande de todos los océanos del mundo'
+                    ]
+                  }
+                });
+              });
+          }, []);
+
+          const getRandomText = (theme, lvl) => {
+            if (!textLists) return '';
+            
+            let allTexts = [];
+            
+            if (theme === 'todas') {
+              // Mezclar frases de todos los temas
+              Object.keys(textLists).forEach(themeName => {
+                if (textLists[themeName][lvl]) {
+                  allTexts = [...allTexts, ...textLists[themeName][lvl]];
+                }
+              });
+            } else {
+              // Usar frases del tema seleccionado
+              allTexts = [...(textLists[theme]?.[lvl] || [])];
+            }
+            
+            // Mezclar completamente el array usando Fisher-Yates
+            for (let i = allTexts.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [allTexts[i], allTexts[j]] = [allTexts[j], allTexts[i]];
+            }
+            
+            // Filtrar textos ya usados
+            const availableTexts = allTexts.filter(text => !usedTexts.includes(text));
+            
+            // Si ya usamos todos, reiniciar
+            if (availableTexts.length === 0) {
+              setUsedTexts([]);
+              return allTexts[0] || '';
+            }
+            
+            const selectedText = availableTexts[0];
+            setUsedTexts([...usedTexts, selectedText]);
+            return selectedText;
           };
 
-          const startGame = (selectedLevel) => {
+          const startGame = (selectedLevel, theme) => {
             setLevel(selectedLevel);
+            setSelectedTheme(theme);
             setGameStarted(true);
             setCompleted(false);
             setMistakes(0);
             setUserInput('');
-            const randomText = texts[selectedLevel][Math.floor(Math.random() * texts[selectedLevel].length)];
+            setUsedTexts([]);
+            const randomText = getRandomText(theme, selectedLevel);
             setCurrentText(randomText);
+          };
+
+          const nextText = () => {
+            const randomText = getRandomText(selectedTheme, level);
+            setCurrentText(randomText);
+            setUserInput('');
+            setCompleted(false);
+            setMistakes(0);
+          };
+
+          const selectDifficulty = (selectedLevel) => {
+            setLevel(selectedLevel);
+            setShowThemeSelector(true);
           };
 
           const handleInputChange = (e) => {
@@ -68,15 +136,15 @@
             }
           };
 
-          const nextText = () => {
-            const randomText = texts[level][Math.floor(Math.random() * texts[level].length)];
-            setCurrentText(randomText);
-            setUserInput('');
-            setCompleted(false);
-            setMistakes(0);
-          };
+          if (!textLists) {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-purple-400 to-pink-500 p-4 flex items-center justify-center">
+                <div className="text-white text-2xl">Cargando frases...</div>
+              </div>
+            );
+          }
 
-          if (!gameStarted) {
+          if (!gameStarted && !showThemeSelector) {
             return (
               <div className="min-h-screen bg-gradient-to-b from-purple-400 to-pink-500 p-4">
                 <div className="max-w-4xl mx-auto text-white">
@@ -92,7 +160,7 @@
                   
                   <div className="grid md:grid-cols-3 gap-6">
                     <button
-                      onClick={() => startGame('facil')}
+                      onClick={() => selectDifficulty('facil')}
                       className="bg-green-500 hover:bg-green-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">😊 Fácil</h3>
@@ -101,7 +169,7 @@
                     </button>
                     
                     <button
-                      onClick={() => startGame('medio')}
+                      onClick={() => selectDifficulty('medio')}
                       className="bg-yellow-500 hover:bg-yellow-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🤔 Medio</h3>
@@ -110,13 +178,57 @@
                     </button>
                     
                     <button
-                      onClick={() => startGame('dificil')}
+                      onClick={() => selectDifficulty('dificil')}
                       className="bg-red-500 hover:bg-red-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🔥 Difícil</h3>
                       <p className="text-sm">Frases largas</p>
                       <p className="text-sm">Palabras complejas</p>
                     </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (!gameStarted && showThemeSelector) {
+            const themes = [
+              { id: 'todas', name: 'Todas (Mezcla)', emoji: '🎲' },
+              { id: 'animales', name: 'Animales', emoji: '🦁' },
+              { id: 'naturaleza', name: 'Naturaleza', emoji: '🌳' },
+              { id: 'comida', name: 'Comida', emoji: '🍕' },
+              { id: 'escuela', name: 'Escuela', emoji: '📚' },
+              { id: 'ciencia', name: 'Ciencia', emoji: '🔬' },
+              { id: 'general', name: 'General', emoji: '📝' }
+            ];
+
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-purple-400 to-pink-500 p-4">
+                <div className="max-w-5xl mx-auto text-white">
+                  <button
+                    onClick={() => {
+                      setShowThemeSelector(false);
+                      setLevel(null);
+                    }}
+                    className="mb-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-bold"
+                  >
+                    ← Volver a Niveles
+                  </button>
+                  
+                  <h2 className="text-4xl font-bold mb-4 text-center">Elige una temática 🎯</h2>
+                  <p className="text-xl text-center mb-8">Nivel: {level === 'facil' ? 'Fácil 😊' : level === 'medio' ? 'Medio 🤔' : 'Difícil 🔥'}</p>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {themes.map(theme => (
+                      <button
+                        key={theme.id}
+                        onClick={() => startGame(level, theme.id)}
+                        className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl p-6 transform transition hover:scale-105"
+                      >
+                        <div className="text-5xl mb-2">{theme.emoji}</div>
+                        <h3 className="text-xl font-bold">{theme.name}</h3>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -149,10 +261,14 @@
                         Siguiente Texto
                       </button>
                       <button
-                        onClick={() => setGameStarted(false)}
+                        onClick={() => {
+                          setGameStarted(false);
+                          setShowThemeSelector(false);
+                          setLevel(null);
+                        }}
                         className="bg-white text-green-600 px-6 py-3 rounded-lg font-bold text-lg"
                       >
-                        Cambiar Nivel
+                        Cambiar Nivel o Tema
                       </button>
                     </div>
                   </div>

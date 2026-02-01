@@ -24,11 +24,13 @@
           const [gameOver, setGameOver] = useState(false);
           const [lives, setLives] = useState(3);
           const [score, setScore] = useState(0);
+          const [explosions, setExplosions] = useState([]);
+          const [isMoving, setIsMoving] = useState(false);
 
           const levels = {
             facil: { range: 10, operations: ['suma'], fallSpeed: 0.283 },
-            medio: { range: 20, operations: ['suma', 'resta'], fallSpeed: 0.386 },
-            dificil: { range: 50, operations: ['suma', 'resta', 'multiplicar'], fallSpeed: 0.607 }
+            medio: { range: 20, operations: ['suma', 'resta'], fallSpeed: 0.283 },
+            dificil: { range: 50, operations: ['suma', 'resta', 'multiplicar'], fallSpeed: 0.283 }
           };
 
           const generateQuestion = (levelConfig) => {
@@ -138,17 +140,49 @@
           }, [gameStarted, gameOver]);
 
           const shootEnemy = (enemy) => {
-            if (enemy.isCorrect) {
-              setScore(s => s + 10);
-              const newQuestion = generateQuestion(levels[level]);
-              setQuestion(newQuestion);
-              spawnEnemies(newQuestion.answer);
-            } else {
-              setLives(l => l - 1);
-              if (lives <= 1) {
-                setGameOver(true);
+            if (isMoving) return; // Prevent multiple clicks while moving
+            
+            setIsMoving(true);
+            
+            // Move ship to enemy position
+            setPlayerX(enemy.x);
+            
+            // Wait for ship to reach position, then shoot
+            setTimeout(() => {
+              // Create explosion
+              const explosion = {
+                id: Date.now(),
+                x: enemy.x,
+                y: enemy.y,
+                isCorrect: enemy.isCorrect
+              };
+              setExplosions(prev => [...prev, explosion]);
+              
+              // Remove explosion after animation
+              setTimeout(() => {
+                setExplosions(prev => prev.filter(e => e.id !== explosion.id));
+              }, 600);
+              
+              // Remove the clicked enemy
+              setEnemies(prev => prev.filter(e => e.id !== enemy.id));
+              
+              if (enemy.isCorrect) {
+                setScore(s => s + 10);
+                // Wait a bit before spawning new question
+                setTimeout(() => {
+                  const newQuestion = generateQuestion(levels[level]);
+                  setQuestion(newQuestion);
+                  spawnEnemies(newQuestion.answer);
+                  setIsMoving(false);
+                }, 300);
+              } else {
+                setLives(l => l - 1);
+                if (lives <= 1) {
+                  setGameOver(true);
+                }
+                setIsMoving(false);
               }
-            }
+            }, 500); // Time for ship to move
           };
 
           if (!gameStarted) {
@@ -181,7 +215,7 @@
                     >
                       <h3 className="text-3xl font-bold mb-2">🤔 Medio</h3>
                       <p className="text-sm">Sumas y restas hasta 20</p>
-                      <p className="text-sm">11 segundos</p>
+                      <p className="text-sm">15 segundos</p>
                     </button>
                     
                     <button
@@ -190,7 +224,7 @@
                     >
                       <h3 className="text-3xl font-bold mb-2">🔥 Difícil</h3>
                       <p className="text-sm">Todas las operaciones</p>
-                      <p className="text-sm">7 segundos</p>
+                      <p className="text-sm">15 segundos</p>
                     </button>
                   </div>
                 </div>
@@ -256,28 +290,81 @@
                     <button
                       key={enemy.id}
                       onClick={() => shootEnemy(enemy)}
-                      className="absolute bg-red-500 hover:bg-red-600 text-white font-bold rounded-full w-16 h-16 flex items-center justify-center cursor-pointer"
+                      disabled={isMoving}
+                      className="absolute bg-red-500 hover:bg-red-600 text-white font-bold rounded-full w-16 h-16 flex items-center justify-center cursor-pointer transition-all"
                       style={{
                         left: `${enemy.x}%`,
                         top: `${enemy.y}%`,
-                        transform: 'translate(-50%, -50%)'
+                        transform: 'translate(-50%, -50%)',
+                        opacity: isMoving ? 0.7 : 1
                       }}
                     >
                       {enemy.value}
                     </button>
                   ))}
 
+                  {explosions.map(explosion => (
+                    <div
+                      key={explosion.id}
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: `${explosion.x}%`,
+                        top: `${explosion.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        animation: 'explode 0.6s ease-out'
+                      }}
+                    >
+                      <div 
+                        className={`text-6xl font-bold ${explosion.isCorrect ? 'text-green-400' : 'text-red-600'}`}
+                        style={{
+                          textShadow: explosion.isCorrect 
+                            ? '0 0 20px rgba(74, 222, 128, 0.8)' 
+                            : '0 0 20px rgba(239, 68, 68, 0.8)',
+                          animation: 'pulse 0.6s ease-out'
+                        }}
+                      >
+                        💥
+                      </div>
+                    </div>
+                  ))}
+
                   <div
-                    className="absolute bottom-4 bg-green-500 rounded-t-full w-12 h-16 flex items-end justify-center"
-                    style={{ left: `${playerX}%`, transform: 'translateX(-50%)' }}
+                    className="absolute bottom-4 bg-green-500 rounded-t-full w-12 h-16 flex items-end justify-center transition-all duration-500"
+                    style={{ 
+                      left: `${playerX}%`, 
+                      transform: 'translateX(-50%)',
+                      transitionProperty: 'left'
+                    }}
                   >
                     <div className="text-2xl">🚀</div>
                   </div>
                 </div>
 
-                <p className="text-center mt-4 text-lg">
-                  Usa las flechas ← → para moverte. Haz clic en la respuesta correcta!
-                </p>
+                <style>{`
+                  @keyframes explode {
+                    0% {
+                      transform: translate(-50%, -50%) scale(0.5);
+                      opacity: 1;
+                    }
+                    50% {
+                      transform: translate(-50%, -50%) scale(1.5);
+                      opacity: 1;
+                    }
+                    100% {
+                      transform: translate(-50%, -50%) scale(2);
+                      opacity: 0;
+                    }
+                  }
+                  
+                  @keyframes pulse {
+                    0%, 100% {
+                      transform: scale(1);
+                    }
+                    50% {
+                      transform: scale(1.2);
+                    }
+                  }
+                `}</style>
               </div>
             </div>
           );
