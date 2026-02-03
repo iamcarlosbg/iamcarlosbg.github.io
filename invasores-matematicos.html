@@ -17,6 +17,9 @@
         
         const MathInvaders = () => {
           const [level, setLevel] = useState(null);
+          const [operationType, setOperationType] = useState(null);
+          const [difficulty, setDifficulty] = useState(null);
+          const [selectedTable, setSelectedTable] = useState(null);
           const [gameStarted, setGameStarted] = useState(false);
           const [enemies, setEnemies] = useState([]);
           const [playerX, setPlayerX] = useState(50);
@@ -26,11 +29,23 @@
           const [score, setScore] = useState(0);
           const [explosions, setExplosions] = useState([]);
           const [isMoving, setIsMoving] = useState(false);
+          const [isFullscreen, setIsFullscreen] = useState(false);
 
           const levels = {
-            facil: { range: 10, operations: ['suma'], fallSpeed: 0.283 },
-            medio: { range: 20, operations: ['suma', 'resta'], fallSpeed: 0.283 },
-            dificil: { range: 50, operations: ['suma', 'resta', 'multiplicar'], fallSpeed: 0.283 }
+            suma_facil: { range: 9, operations: ['suma'], fallSpeed: 0.283, time: 15, label: 'Sumas - Fácil (1 cifra)' },
+            suma_medio: { range: 99, operations: ['suma_sin_llevar'], fallSpeed: 0.25, time: 17, label: 'Sumas - Medio (2 cifras sin llevar)' },
+            suma_dificil: { range: 99, operations: ['suma_con_llevar'], fallSpeed: 0.21, time: 20, label: 'Sumas - Difícil (2 cifras con llevar)' },
+            
+            resta_facil: { range: 9, operations: ['resta'], fallSpeed: 0.283, time: 15, label: 'Restas - Fácil (1 cifra)' },
+            resta_medio: { range: 99, operations: ['resta_sin_llevar'], fallSpeed: 0.25, time: 17, label: 'Restas - Medio (2 cifras sin llevar)' },
+            resta_dificil: { range: 99, operations: ['resta_con_llevar'], fallSpeed: 0.21, time: 20, label: 'Restas - Difícil (2 cifras con llevar)' },
+            
+            multiplicar_facil: { range: 10, operations: ['multiplicar'], fallSpeed: 0.283, time: 15, label: 'Multiplicaciones - Fácil', tabla: null },
+            multiplicar_dificil: { range: 10, operations: ['multiplicar'], fallSpeed: 0.283, time: 15, label: 'Multiplicaciones - Difícil (todas)' },
+            
+            todo_facil: { range: 9, operations: ['suma', 'resta'], fallSpeed: 0.283, time: 15, label: 'Todo - Fácil (1 cifra)' },
+            todo_medio: { range: 99, operations: ['suma_sin_llevar', 'resta_sin_llevar'], fallSpeed: 0.25, time: 17, label: 'Todo - Medio (2 cifras sin llevar)' },
+            todo_dificil: { range: 99, operations: ['suma_con_llevar', 'resta_con_llevar', 'multiplicar'], fallSpeed: 0.21, time: 20, label: 'Todo - Difícil' }
           };
 
           const generateQuestion = (levelConfig) => {
@@ -39,18 +54,88 @@
             let num1, num2, answer, questionText;
 
             if (op === 'suma') {
+              // Suma de 1 cifra
               num1 = Math.floor(Math.random() * levelConfig.range) + 1;
               num2 = Math.floor(Math.random() * levelConfig.range) + 1;
               answer = num1 + num2;
               questionText = `${num1} + ${num2}`;
+            } else if (op === 'suma_sin_llevar') {
+              // Suma de 2 cifras sin llevar
+              do {
+                num1 = Math.floor(Math.random() * 90) + 10;
+                num2 = Math.floor(Math.random() * 90) + 10;
+                // Verificar que no haya llevadas
+                const unidades1 = num1 % 10;
+                const unidades2 = num2 % 10;
+                const decenas1 = Math.floor(num1 / 10);
+                const decenas2 = Math.floor(num2 / 10);
+                if (unidades1 + unidades2 < 10 && decenas1 + decenas2 < 10) {
+                  answer = num1 + num2;
+                  questionText = `${num1} + ${num2}`;
+                  break;
+                }
+              } while (true);
+            } else if (op === 'suma_con_llevar') {
+              // Suma de 2 cifras con llevar
+              do {
+                num1 = Math.floor(Math.random() * 90) + 10;
+                num2 = Math.floor(Math.random() * 90) + 10;
+                const unidades1 = num1 % 10;
+                const unidades2 = num2 % 10;
+                // Asegurar que haya llevada
+                if (unidades1 + unidades2 >= 10) {
+                  answer = num1 + num2;
+                  questionText = `${num1} + ${num2}`;
+                  break;
+                }
+              } while (true);
             } else if (op === 'resta') {
+              // Resta de 1 cifra
               num1 = Math.floor(Math.random() * levelConfig.range) + 1;
               num2 = Math.floor(Math.random() * num1) + 1;
               answer = num1 - num2;
               questionText = `${num1} - ${num2}`;
-            } else {
-              num1 = Math.floor(Math.random() * 10) + 1;
-              num2 = Math.floor(Math.random() * 10) + 1;
+            } else if (op === 'resta_sin_llevar') {
+              // Resta de 2 cifras sin llevar
+              do {
+                num1 = Math.floor(Math.random() * 90) + 10;
+                num2 = Math.floor(Math.random() * num1);
+                const unidades1 = num1 % 10;
+                const unidades2 = num2 % 10;
+                const decenas1 = Math.floor(num1 / 10);
+                const decenas2 = Math.floor(num2 / 10);
+                // Verificar que no necesite pedir prestado
+                if (unidades1 >= unidades2 && decenas1 >= decenas2 && num2 >= 10) {
+                  answer = num1 - num2;
+                  questionText = `${num1} - ${num2}`;
+                  break;
+                }
+              } while (true);
+            } else if (op === 'resta_con_llevar') {
+              // Resta de 2 cifras con llevar
+              do {
+                num1 = Math.floor(Math.random() * 90) + 10;
+                num2 = Math.floor(Math.random() * num1);
+                const unidades1 = num1 % 10;
+                const unidades2 = num2 % 10;
+                // Asegurar que necesite pedir prestado
+                if (unidades1 < unidades2 && num2 >= 10) {
+                  answer = num1 - num2;
+                  questionText = `${num1} - ${num2}`;
+                  break;
+                }
+              } while (true);
+            } else if (op === 'multiplicar') {
+              // Multiplicación
+              if (levelConfig.tabla) {
+                // Tabla específica
+                num1 = levelConfig.tabla;
+                num2 = Math.floor(Math.random() * 10) + 1;
+              } else {
+                // Todas las tablas
+                num1 = Math.floor(Math.random() * 10) + 1;
+                num2 = Math.floor(Math.random() * 10) + 1;
+              }
               answer = num1 * num2;
               questionText = `${num1} × ${num2}`;
             }
@@ -58,16 +143,39 @@
             return { questionText, answer };
           };
 
-          const startGame = (selectedLevel) => {
+          const startGame = (selectedLevel, table = null) => {
+            const levelConfig = {...levels[selectedLevel]};
+            if (table) {
+              levelConfig.tabla = table;
+            }
             setLevel(selectedLevel);
             setGameStarted(true);
             setScore(0);
             setLives(3);
             setGameOver(false);
-            const newQuestion = generateQuestion(levels[selectedLevel]);
+            const newQuestion = generateQuestion(levelConfig);
             setQuestion(newQuestion);
             spawnEnemies(newQuestion.answer);
           };
+
+          const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen();
+              setIsFullscreen(true);
+            } else {
+              document.exitFullscreen();
+              setIsFullscreen(false);
+            }
+          };
+
+          useEffect(() => {
+            const handleFullscreenChange = () => {
+              setIsFullscreen(!!document.fullscreenElement);
+            };
+            
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          }, []);
 
           const spawnEnemies = (correctAnswer) => {
             const answers = [correctAnswer];
@@ -185,46 +293,179 @@
             }, 500); // Time for ship to move
           };
 
-          if (!gameStarted) {
+          if (!operationType) {
             return (
               <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 p-4">
                 <div className="max-w-4xl mx-auto text-white">
-                  <a
-                    href="index.html"
-                    className="mb-4 inline-block bg-white text-purple-600 px-4 py-2 rounded-lg font-bold no-underline"
-                  >
-                    🏠 Volver al Menú
-                  </a>
+                  <div className="flex justify-between items-center mb-4">
+                    <a
+                      href="index.html"
+                      className="bg-white text-purple-600 px-4 py-2 rounded-lg font-bold no-underline"
+                    >
+                      🏠 Volver al Menú
+                    </a>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="bg-white text-purple-600 px-4 py-2 rounded-lg font-bold"
+                    >
+                      {isFullscreen ? '🗗 Salir' : '⛶ Pantalla Completa'}
+                    </button>
+                  </div>
                   
                   <h2 className="text-4xl font-bold mb-8 text-center">Invasores Matemáticos 🚀</h2>
+                  <p className="text-xl text-center mb-8">¿Qué quieres practicar?</p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <button
+                      onClick={() => setOperationType('suma')}
+                      className="bg-green-500 hover:bg-green-600 rounded-xl p-8 transform transition hover:scale-105"
+                    >
+                      <div className="text-6xl mb-4">➕</div>
+                      <h3 className="text-3xl font-bold mb-2">Sumas</h3>
+                      <p className="text-sm">Practica operaciones de suma</p>
+                    </button>
+                    
+                    <button
+                      onClick={() => setOperationType('resta')}
+                      className="bg-yellow-500 hover:bg-yellow-600 rounded-xl p-8 transform transition hover:scale-105"
+                    >
+                      <div className="text-6xl mb-4">➖</div>
+                      <h3 className="text-3xl font-bold mb-2">Restas</h3>
+                      <p className="text-sm">Practica operaciones de resta</p>
+                    </button>
+                    
+                    <button
+                      onClick={() => setOperationType('multiplicar')}
+                      className="bg-red-500 hover:bg-red-600 rounded-xl p-8 transform transition hover:scale-105"
+                    >
+                      <div className="text-6xl mb-4">✖️</div>
+                      <h3 className="text-3xl font-bold mb-2">Multiplicaciones</h3>
+                      <p className="text-sm">Practica las tablas de multiplicar</p>
+                    </button>
+                    
+                    <button
+                      onClick={() => setOperationType('todo')}
+                      className="bg-purple-500 hover:bg-purple-600 rounded-xl p-8 transform transition hover:scale-105"
+                    >
+                      <div className="text-6xl mb-4">🎲</div>
+                      <h3 className="text-3xl font-bold mb-2">¡Todo Mezclado!</h3>
+                      <p className="text-sm">Practica todas las operaciones</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (operationType && !gameStarted && operationType === 'multiplicar' && !difficulty) {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 p-4">
+                <div className="max-w-4xl mx-auto text-white">
+                  <button
+                    onClick={() => setOperationType(null)}
+                    className="mb-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-bold"
+                  >
+                    ← Volver
+                  </button>
+                  
+                  <h2 className="text-4xl font-bold mb-8 text-center">Multiplicaciones ✖️</h2>
+                  <p className="text-xl text-center mb-8">Elige el nivel:</p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <button
+                      onClick={() => setDifficulty('facil')}
+                      className="bg-green-500 hover:bg-green-600 rounded-xl p-8"
+                    >
+                      <h3 className="text-3xl font-bold mb-2">😊 Fácil</h3>
+                      <p className="text-sm">Elige una tabla específica</p>
+                      <p className="text-sm">15 segundos</p>
+                    </button>
+                    
+                    <button
+                      onClick={() => startGame('multiplicar_dificil')}
+                      className="bg-red-500 hover:bg-red-600 rounded-xl p-8"
+                    >
+                      <h3 className="text-3xl font-bold mb-2">🔥 Difícil</h3>
+                      <p className="text-sm">Todas las tablas mezcladas</p>
+                      <p className="text-sm">15 segundos</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (operationType === 'multiplicar' && difficulty === 'facil' && !gameStarted) {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 p-4">
+                <div className="max-w-5xl mx-auto text-white">
+                  <button
+                    onClick={() => setDifficulty(null)}
+                    className="mb-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-bold"
+                  >
+                    ← Volver
+                  </button>
+                  
+                  <h2 className="text-4xl font-bold mb-4 text-center">¿Qué tabla quieres practicar? 🔢</h2>
+                  
+                  <div className="grid grid-cols-5 gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(table => (
+                      <button
+                        key={table}
+                        onClick={() => startGame('multiplicar_facil', table)}
+                        className="bg-green-500 hover:bg-green-600 rounded-xl p-6 transform transition hover:scale-105"
+                      >
+                        <div className="text-4xl font-bold">Tabla del {table}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (operationType && !gameStarted && operationType !== 'multiplicar') {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 p-4">
+                <div className="max-w-4xl mx-auto text-white">
+                  <button
+                    onClick={() => setOperationType(null)}
+                    className="mb-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-bold"
+                  >
+                    ← Volver
+                  </button>
+                  
+                  <h2 className="text-4xl font-bold mb-8 text-center">
+                    {operationType === 'suma' ? 'Sumas ➕' : operationType === 'resta' ? 'Restas ➖' : 'Todo Mezclado 🎲'}
+                  </h2>
                   <p className="text-xl text-center mb-8">Elige tu nivel de dificultad:</p>
                   
                   <div className="grid md:grid-cols-3 gap-6">
                     <button
-                      onClick={() => startGame('facil')}
+                      onClick={() => startGame(`${operationType}_facil`)}
                       className="bg-green-500 hover:bg-green-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">😊 Fácil</h3>
-                      <p className="text-sm">Sumas hasta 10</p>
+                      <p className="text-sm">1 cifra</p>
                       <p className="text-sm">15 segundos</p>
                     </button>
                     
                     <button
-                      onClick={() => startGame('medio')}
+                      onClick={() => startGame(`${operationType}_medio`)}
                       className="bg-yellow-500 hover:bg-yellow-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🤔 Medio</h3>
-                      <p className="text-sm">Sumas y restas hasta 20</p>
-                      <p className="text-sm">15 segundos</p>
+                      <p className="text-sm">2 cifras sin {operationType === 'suma' ? 'llevar' : 'pedir prestado'}</p>
+                      <p className="text-sm">17 segundos</p>
                     </button>
                     
                     <button
-                      onClick={() => startGame('dificil')}
+                      onClick={() => startGame(`${operationType}_dificil`)}
                       className="bg-red-500 hover:bg-red-600 rounded-xl p-8"
                     >
                       <h3 className="text-3xl font-bold mb-2">🔥 Difícil</h3>
-                      <p className="text-sm">Todas las operaciones</p>
-                      <p className="text-sm">15 segundos</p>
+                      <p className="text-sm">2 cifras con {operationType === 'suma' ? 'llevar' : 'pedir prestado'}</p>
+                      <p className="text-sm">20 segundos</p>
                     </button>
                   </div>
                 </div>
@@ -241,7 +482,7 @@
                   <div className="text-6xl mb-8">🏆</div>
                   <div className="flex gap-4 justify-center flex-wrap">
                     <button
-                      onClick={() => startGame(level)}
+                      onClick={() => startGame(level, levels[level].tabla)}
                       className="bg-green-500 hover:bg-green-600 px-8 py-4 rounded-xl text-xl font-bold"
                     >
                       Jugar de Nuevo
@@ -249,11 +490,13 @@
                     <button
                       onClick={() => {
                         setGameStarted(false);
+                        setOperationType(null);
+                        setDifficulty(null);
                         setLevel(null);
                       }}
                       className="bg-blue-500 hover:bg-blue-600 px-8 py-4 rounded-xl text-xl font-bold"
                     >
-                      Cambiar Nivel
+                      Cambiar Operación
                     </button>
                     <a
                       href="index.html"
@@ -269,29 +512,37 @@
 
           return (
             <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 p-4">
-              <div className="max-w-4xl mx-auto text-white">
-                <div className="flex justify-between items-center mb-4">
+              <div className={`mx-auto text-white ${isFullscreen ? 'max-w-7xl' : 'max-w-4xl'}`}>
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <a
                     href="index.html"
-                    className="bg-white text-purple-600 px-4 py-2 rounded-lg font-bold no-underline"
+                    className={`bg-white text-purple-600 px-4 py-2 rounded-lg font-bold no-underline ${isFullscreen ? 'text-xl' : ''}`}
                   >
                     🏠 Menú
                   </a>
-                  <div className="text-2xl font-bold">Puntos: {score}</div>
-                  <div className="text-2xl font-bold">Vidas: {'❤️'.repeat(lives)}</div>
+                  <div className={`font-bold ${isFullscreen ? 'text-4xl' : 'text-2xl'}`}>Puntos: {score}</div>
+                  <div className={`font-bold ${isFullscreen ? 'text-4xl' : 'text-2xl'}`}>Vidas: {'❤️'.repeat(lives)}</div>
+                  <button
+                    onClick={toggleFullscreen}
+                    className={`bg-white text-purple-600 px-4 py-2 rounded-lg font-bold ${isFullscreen ? 'text-xl' : ''}`}
+                  >
+                    {isFullscreen ? '🗗 Salir' : '⛶ Ampliar'}
+                  </button>
                 </div>
 
                 <div className="bg-black bg-opacity-50 rounded-xl p-4 mb-4">
-                  <h3 className="text-3xl font-bold text-center">¿Cuánto es {question?.questionText}?</h3>
+                  <h3 className={`font-bold text-center ${isFullscreen ? 'text-5xl' : 'text-3xl'}`}>
+                    ¿Cuánto es {question?.questionText}?
+                  </h3>
                 </div>
 
-                <div className="relative bg-blue-900 rounded-xl h-96 overflow-hidden">
+                <div className={`relative bg-blue-900 rounded-xl overflow-hidden ${isFullscreen ? 'h-screen-80' : 'h-96'}`} style={isFullscreen ? {height: 'calc(100vh - 300px)'} : {}}>
                   {enemies.map(enemy => (
                     <button
                       key={enemy.id}
                       onClick={() => shootEnemy(enemy)}
                       disabled={isMoving}
-                      className="absolute bg-red-500 hover:bg-red-600 text-white font-bold rounded-full w-16 h-16 flex items-center justify-center cursor-pointer transition-all"
+                      className={`absolute bg-red-500 hover:bg-red-600 text-white font-bold rounded-full flex items-center justify-center cursor-pointer transition-all ${isFullscreen ? 'w-24 h-24 text-3xl' : 'w-16 h-16 text-xl'}`}
                       style={{
                         left: `${enemy.x}%`,
                         top: `${enemy.y}%`,
@@ -315,7 +566,7 @@
                       }}
                     >
                       <div 
-                        className={`text-6xl font-bold ${explosion.isCorrect ? 'text-green-400' : 'text-red-600'}`}
+                        className={`font-bold ${explosion.isCorrect ? 'text-green-400' : 'text-red-600'} ${isFullscreen ? 'text-9xl' : 'text-6xl'}`}
                         style={{
                           textShadow: explosion.isCorrect 
                             ? '0 0 20px rgba(74, 222, 128, 0.8)' 
@@ -329,14 +580,14 @@
                   ))}
 
                   <div
-                    className="absolute bottom-4 bg-green-500 rounded-t-full w-12 h-16 flex items-end justify-center transition-all duration-500"
+                    className={`absolute bottom-4 bg-green-500 rounded-t-full flex items-end justify-center transition-all duration-500 ${isFullscreen ? 'w-20 h-28' : 'w-12 h-16'}`}
                     style={{ 
                       left: `${playerX}%`, 
                       transform: 'translateX(-50%)',
                       transitionProperty: 'left'
                     }}
                   >
-                    <div className="text-2xl">🚀</div>
+                    <div className={isFullscreen ? 'text-4xl' : 'text-2xl'}>🚀</div>
                   </div>
                 </div>
 

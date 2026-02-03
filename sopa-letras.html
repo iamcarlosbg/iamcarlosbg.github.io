@@ -26,6 +26,28 @@
           const [wordLists, setWordLists] = useState(null);
           const [selectedTheme, setSelectedTheme] = useState(null);
           const [showThemeSelector, setShowThemeSelector] = useState(false);
+          const [isDragging, setIsDragging] = useState(false);
+          const [dragStart, setDragStart] = useState(null);
+          const [isFullscreen, setIsFullscreen] = useState(false);
+
+          const toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen();
+              setIsFullscreen(true);
+            } else {
+              document.exitFullscreen();
+              setIsFullscreen(false);
+            }
+          };
+
+          useEffect(() => {
+            const handleFullscreenChange = () => {
+              setIsFullscreen(!!document.fullscreenElement);
+            };
+            
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          }, []);
 
           // Cargar palabras del archivo JSON
           useEffect(() => {
@@ -159,24 +181,73 @@
             setShowThemeSelector(true);
           };
 
-          const handleCellClick = (row, col) => {
+          const handleCellStart = (row, col) => {
+            setIsDragging(true);
+            setDragStart({ row, col });
+            setSelectedCells([`${row}-${col}`]);
+          };
+
+          const handleCellMove = (row, col) => {
+            if (!isDragging || !dragStart) return;
+            
             const cellId = `${row}-${col}`;
-            const newSelected = [...selectedCells];
+            
+            // Verificar si el movimiento es en línea recta (horizontal, vertical o diagonal)
+            const rowDiff = Math.abs(row - dragStart.row);
+            const colDiff = Math.abs(col - dragStart.col);
+            
+            // Solo permitir líneas rectas
+            if (rowDiff !== 0 && colDiff !== 0 && rowDiff !== colDiff) return;
+            
+            // Construir el array de celdas seleccionadas
+            const newSelected = [];
+            const steps = Math.max(rowDiff, colDiff);
+            const rowStep = rowDiff === 0 ? 0 : (row - dragStart.row) / steps;
+            const colStep = colDiff === 0 ? 0 : (col - dragStart.col) / steps;
+            
+            for (let i = 0; i <= steps; i++) {
+              const currentRow = dragStart.row + Math.round(i * rowStep);
+              const currentCol = dragStart.col + Math.round(i * colStep);
+              newSelected.push(`${currentRow}-${currentCol}`);
+            }
+            
+            setSelectedCells(newSelected);
+          };
 
-            if (newSelected.includes(cellId)) {
-              setSelectedCells(newSelected.filter(c => c !== cellId));
-            } else {
-              newSelected.push(cellId);
-              setSelectedCells(newSelected);
-
-              words.forEach(wordObj => {
-                const allSelected = wordObj.positions.every(pos => newSelected.includes(pos));
-                if (allSelected && !foundWords.includes(wordObj.word)) {
+          const handleCellEnd = () => {
+            if (!isDragging) return;
+            
+            setIsDragging(false);
+            
+            // Verificar si se encontró alguna palabra
+            let wordFound = false;
+            words.forEach(wordObj => {
+              if (foundWords.includes(wordObj.word)) return;
+              
+              // Verificar si las celdas seleccionadas coinciden con la palabra
+              const positions = wordObj.positions;
+              const selectedSet = new Set(selectedCells);
+              const positionsSet = new Set(positions);
+              
+              // Verificar coincidencia exacta (en cualquier dirección)
+              if (selectedCells.length === positions.length) {
+                const allMatch = positions.every(pos => selectedSet.has(pos));
+                const allMatchReverse = selectedCells.every(pos => positionsSet.has(pos));
+                
+                if (allMatch || allMatchReverse) {
                   setFoundWords([...foundWords, wordObj.word]);
                   setScore(s => s + 20);
+                  wordFound = true;
                 }
-              });
+              }
+            });
+            
+            // Limpiar selección si no se encontró palabra
+            if (!wordFound) {
+              setSelectedCells([]);
             }
+            
+            setDragStart(null);
           };
 
           if (!wordLists) {
@@ -284,15 +355,21 @@
 
           return (
             <div className="min-h-screen bg-gradient-to-b from-green-400 to-teal-500 p-4">
-              <div className="max-w-6xl mx-auto text-white">
+              <div className={`mx-auto text-white ${isFullscreen ? 'max-w-7xl' : 'max-w-6xl'}`}>
                 <div className="flex justify-between items-center mb-4">
                   <a
                     href="index.html"
-                    className="bg-white text-teal-600 px-4 py-2 rounded-lg font-bold no-underline"
+                    className={`bg-white text-teal-600 px-4 py-2 rounded-lg font-bold no-underline ${isFullscreen ? 'text-xl' : ''}`}
                   >
                     🏠 Menú
                   </a>
-                  <div className="text-2xl font-bold">Puntos: {score}</div>
+                  <div className={`font-bold ${isFullscreen ? 'text-4xl' : 'text-2xl'}`}>Puntos: {score}</div>
+                  <button
+                    onClick={toggleFullscreen}
+                    className={`bg-white text-teal-600 px-4 py-2 rounded-lg font-bold ${isFullscreen ? 'text-xl' : ''}`}
+                  >
+                    {isFullscreen ? '🗗 Salir' : '⛶ Ampliar'}
+                  </button>
                 </div>
 
                 {allWordsFound && (
@@ -323,7 +400,12 @@
                 <div className="grid lg:grid-cols-4 gap-6">
                   <div className="lg:col-span-3">
                     <div className="bg-white rounded-xl p-4 inline-block">
-                      <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${grid.length}, minmax(0, 1fr))` }}>
+                      <div 
+                        className="grid gap-1 select-none" 
+                        style={{ gridTemplateColumns: `repeat(${grid.length}, minmax(0, 1fr))` }}
+                        onMouseLeave={handleCellEnd}
+                        onTouchEnd={handleCellEnd}
+                      >
                         {grid.map((row, i) =>
                           row.map((cell, j) => {
                             const cellId = `${i}-${j}`;
@@ -333,10 +415,32 @@
                             );
 
                             return (
-                              <button
+                              <div
                                 key={cellId}
-                                onClick={() => handleCellClick(i, j)}
-                                className={`w-10 h-10 font-bold text-lg rounded transition ${
+                                onMouseDown={() => handleCellStart(i, j)}
+                                onMouseEnter={() => handleCellMove(i, j)}
+                                onMouseUp={handleCellEnd}
+                                onTouchStart={(e) => {
+                                  e.preventDefault();
+                                  handleCellStart(i, j);
+                                }}
+                                onTouchMove={(e) => {
+                                  e.preventDefault();
+                                  const touch = e.touches[0];
+                                  const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                                  if (element && element.dataset.row && element.dataset.col) {
+                                    handleCellMove(parseInt(element.dataset.row), parseInt(element.dataset.col));
+                                  }
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.preventDefault();
+                                  handleCellEnd();
+                                }}
+                                data-row={i}
+                                data-col={j}
+                                className={`font-bold rounded transition flex items-center justify-center cursor-pointer ${
+                                  isFullscreen ? 'w-16 h-16 text-2xl' : 'w-10 h-10 text-lg'
+                                } ${
                                   isPartOfFoundWord
                                     ? 'bg-green-400 text-white'
                                     : isSelected
@@ -345,7 +449,7 @@
                                 }`}
                               >
                                 {cell}
-                              </button>
+                              </div>
                             );
                           })
                         )}
@@ -354,12 +458,12 @@
                   </div>
 
                   <div className="bg-white bg-opacity-20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold mb-4">Palabras a encontrar:</h3>
+                    <h3 className={`font-bold mb-4 ${isFullscreen ? 'text-3xl' : 'text-2xl'}`}>Palabras a encontrar:</h3>
                     <ul className="space-y-2">
                       {words.map(wordObj => (
                         <li
                           key={wordObj.word}
-                          className={`text-xl font-bold ${
+                          className={`font-bold ${isFullscreen ? 'text-2xl' : 'text-xl'} ${
                             foundWords.includes(wordObj.word)
                               ? 'line-through text-green-300'
                               : 'text-white'
